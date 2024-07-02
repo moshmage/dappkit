@@ -4,7 +4,7 @@ import {Errors} from '@interfaces/error-enum';
 import {ContractAbi} from 'web3';
 
 import {TransactionReceipt} from '@interfaces/web3-core';
-import {Web3Contract} from './web3-contract';
+import {Web3Contract, Web3ContractOptions} from './web3-contract';
 import {Web3ConnectionOptions} from '@interfaces/web3-connection-options';
 
 import {transactionHandler} from '@utils/models/transaction-handler';
@@ -32,7 +32,8 @@ export class Model<Abi extends ContractAbi> {
   /* eslint-disable complexity */
   constructor(web3Connection: Web3Connection | Web3ConnectionOptions,
               readonly abi: Abi,
-              contractAddress?: string) {
+              contractAddress?: string,
+              readonly contractOptions?: Web3ContractOptions) {
     if (!abi || !abi.length)
       throw new Error(Errors.MissingAbiInterfaceFromArguments);
 
@@ -44,7 +45,7 @@ export class Model<Abi extends ContractAbi> {
     else this.web3Connection = new Web3Connection(web3Connection);
 
     if (this.web3Connection.started)
-      this.loadAbi(); // cannot call start because start is async, has to be called by user-land
+      this.loadAbi(); // no need to call .start() be cause .start calls web3connection.start first
   }
   /* eslint-enable complexity */
 
@@ -59,14 +60,11 @@ export class Model<Abi extends ContractAbi> {
    * Initialize the underlying web3js contract
    */
   loadAbi() {
-    this._contract = new Web3Contract(this.connection.Web3, this.abi, this._contractAddress);
+    this._contract = new Web3Contract(this.connection.Web3, this.abi, this._contractAddress, this.contractOptions);
   }
 
   /**
-   * Deprecated - async capabilities on this function will affect autoStart: true option, use `start()` instead
-   * if you need async abilities.
-   *
-   * ~~Preferred~~ Alternative way of initializing and loading a contract, ~~use this function to customize contract loading,
+   * Alternative way of initializing and loading a contract, ~~use this function to customize contract loading,
    * initializing any other dependencies the contract might have when extending from Model~~
    * @throws Errors.MissingContractAddress
    * @deprecated
@@ -98,7 +96,7 @@ export class Model<Abi extends ContractAbi> {
    * @void
    */
   async start() {
-    await this.web3Connection.start();
+    this.web3Connection.start();
     this.loadAbi();
   }
 

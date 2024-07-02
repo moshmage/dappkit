@@ -1,4 +1,4 @@
-import Web3, {Personal, type Web3BaseWalletAccount, Web3EthInterface} from 'web3';
+import Web3, {Personal, Web3BaseProvider, type Web3BaseWalletAccount, Web3EthInterface} from 'web3';
 import {Errors} from '@interfaces/error-enum';
 import {type Web3ConnectionOptions} from '@interfaces/web3-connection-options';
 import {type SupportedProviders} from "web3-types/src/web3_base_provider";
@@ -105,7 +105,7 @@ export class Web3Connection {
     if (!provider)
       throw new Error(Errors.FailedToAssignAProvider);
 
-    this.web3 = new Web3(provider);
+    this.web3 = new Web3(provider as Web3BaseProvider);
     if (!this.options.skipWindowAssignment && typeof window !== 'undefined')
       (window as any).web3 = this.web3;
 
