@@ -1,22 +1,20 @@
-import {Web3Connection} from './web3-connection';
+import {ContractAbi} from 'web3';
+import {Web3BaseWalletAccount} from "web3/lib/types";
+import {NonPayableMethodObject, PayableMethodObject} from "web3-eth-contract/src/types";
 
 import {Errors} from '@interfaces/error-enum';
-import {ContractAbi} from 'web3';
-
 import {TransactionReceipt} from '@interfaces/web3-core';
 import {Web3Contract, Web3ContractOptions} from './web3-contract';
 import {Web3ConnectionOptions} from '@interfaces/web3-connection-options';
-
-import {transactionHandler} from '@utils/models/transaction-handler';
-
-import {NonPayableMethodObject, PayableMethodObject} from "web3-eth-contract/src/types";
 import DeployOptions from "@interfaces/contract/deploy-options";
-import {Web3BaseWalletAccount} from "web3/lib/types";
+
+import {Web3Connection} from './web3-connection';
 
 export class Model<Abi extends ContractAbi> {
   protected _contract!: Web3Contract<Abi>;
   protected _contractAddress?: string;
   private readonly web3Connection!: Web3Connection;
+  readonly contractOptions: Web3ContractOptions = {auto: true, confirmations: 1}
 
   /**
    * Returns the {@link Web3Contract} class representing this contract
@@ -33,7 +31,7 @@ export class Model<Abi extends ContractAbi> {
   constructor(web3Connection: Web3Connection | Web3ConnectionOptions,
               readonly abi: Abi,
               contractAddress?: string,
-              readonly contractOptions?: Web3ContractOptions) {
+              contractOptions?: Web3ContractOptions) {
     if (!abi || !abi.length)
       throw new Error(Errors.MissingAbiInterfaceFromArguments);
 
@@ -43,6 +41,14 @@ export class Model<Abi extends ContractAbi> {
     if (web3Connection instanceof Web3Connection)
       this.web3Connection = web3Connection;
     else this.web3Connection = new Web3Connection(web3Connection);
+
+
+    this.contractOptions = {
+      confirmations: this.web3Connection.options.confirmations || 1,
+      auto: true,
+      debug: this.web3Connection.options.debug,
+      ...contractOptions,
+    } as any;
 
     if (this.web3Connection.started)
       this.loadAbi(); // no need to call .start() be cause .start calls web3connection.start first
@@ -122,37 +128,8 @@ export class Model<Abi extends ContractAbi> {
                                                                       await this.connection.getAddress()),
                                         this.connection.options);
 
-    else return this.sendUnsignedTx(method, value, this.connection.options);
+    else return this.contract.sendUnsignedTx(method, value, this.connection.options);
   }
-
-  /* eslint-disable no-async-promise-executor */
-  /**
-   * Send unsigned transaction
-   */
-  async sendUnsignedTx(method: PayableMethodObject|NonPayableMethodObject,
-                       value?: any, {
-                         debug,
-                         customTransactionHandler: cb
-                       }: Partial<Web3ConnectionOptions> = {}): Promise<TransactionReceipt> {
-    const from = await this.connection.getAddress();
-
-    return new Promise<TransactionReceipt>(async (resolve, reject) => {
-      try {
-        const options = await this.contract.txOptions(method, value, from);
-        const sendMethod = () => method.send({from, value, ...options});
-
-        if (cb)
-          cb(sendMethod() as any, resolve, reject, debug)
-        else
-          transactionHandler(sendMethod(), resolve, reject, debug)
-      } catch (e) {
-        if (debug)
-          console.error(e);
-        reject(e);
-      }
-    }).then(receipt => this.contract.parseReceiptLogs(receipt));
-  }
-  /* eslint-enable no-async-promise-executor */
 
   /**
    * Deploy the loaded abi contract

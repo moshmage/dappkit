@@ -7,23 +7,44 @@ type ResolveReject = (value?: any | unknown) => void;
 export function transactionHandler(transaction: Web3PromiEvent<TransactionReceipt, Record<string, unknown>>,
                                    resolve: ResolveReject,
                                    reject: ResolveReject,
-                                   debug?: boolean) {
-  transaction
-    .on(`receipt`, (receipt) => {
-      if (debug)
-        console.log(receipt);
+                                   debug = false,
+                                   confirmations = 1) {
 
-      resolve(receipt as unknown as TransactionReceipt)
+  const logDebug =
+    (event: string, dbg: any) =>
+        debug ? console.log(`EVENT: ${event}`, dbg) : null;
+
+  if (confirmations === 1)
+    transaction
+      .on(`receipt`, (receipt) => {
+        logDebug("onReceipt (immediate)", receipt);
+
+        if (confirmations === 1)
+          resolve(receipt);
+      });
+  else
+    transaction
+    .on(`confirmation`, ({receipt, confirmations: confirmationNumber}: any) => {
+      logDebug("onConfirmation", {receipt, confirmationNumber, confirmations});
+
+      if (confirmationNumber >= confirmations)
+        resolve(receipt as unknown as TransactionReceipt);
+    });
+
+  transaction
+    .on(`sending`, (r) => {
+      logDebug("onSending", r);
+    })
+    .on(`sent`, (r) => {
+      logDebug("onSent", r);
     })
     .on(`error`, (err) => {
-      if (debug)
-        console.error(err);
+      logDebug("onError", err as Error);
 
       reject(err)
     })
     .catch(err => {
-      if (debug)
-        console.error(err);
+      logDebug("Thrown", err as Error);
 
       reject(err)
     });

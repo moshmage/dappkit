@@ -71,4 +71,21 @@ describe(`Model<any>`, () => {
       expect(await model.name()).to.be.eq(`name`)
     })
   })
+
+  describe(`With confirmations > 1`, () => {
+    it("Waits for 2nd confirmation", async () => {
+      const model = new Model({...options, autoStart: true, confirmations: 2}, erc20.abi);
+      const web3Connection = model.connection;
+
+      let tx;
+
+      (async () => {
+        tx = await model.deploy({data: erc20.bytecode, arguments: ["name", "symbol", "1000", await web3Connection.getAddress()] as any} as any, web3Connection.Account);
+      })();
+
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await hasTxBlockNumber(Promise.resolve(tx))
+
+    })
+  })
 })

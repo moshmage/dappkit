@@ -10,8 +10,6 @@ import DeployOptions from "@interfaces/contract/deploy-options";
 import {NonPayableMethodObject, PayableMethodObject} from "web3-eth-contract/src/types";
 import {Transaction} from "web3-types/src/eth_types";
 
-const DEFAULT_CONFIRMATIONS_NEEDED = 1;
-
 export interface Web3ContractOptions {
   /**
    * If not provided, gas will be `Math.round(gasAmount * gasFactor)`
@@ -39,6 +37,12 @@ export interface Web3ContractOptions {
    * @default true
    */
   auto: boolean; // default: true, auto = true will calculate needed values if none is provided.
+
+  /**
+   * Minimum confirmations needed to return a successful receipt
+   * @default 1
+   */
+  confirmations?: number;
 }
 
 export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
@@ -51,18 +55,20 @@ export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
    * @example
    * `myWeb3Connection.options.gas = 10000;`
    *
-   * @default `{auto: true}`
+   * @default {auto: true, confirmations: 1}
    */
-  readonly options: Web3ContractOptions = {auto: true}
+  readonly options: Web3ContractOptions = {auto: true, confirmations: 1}
 
   constructor(readonly web3: Web3,
               abi: Abi,
               readonly address?: string,
-              options: Web3ContractOptions = {auto: true}) {
+              options: Web3ContractOptions = {auto: true, confirmations: 1}) {
     if (!abi)
       throw new Error(Errors.MissingAbiInterfaceFromArguments)
 
-    this.self = new web3.eth.Contract(abi, address, {config: {contractDataInputFill: "both"}});
+    this.self = new web3.eth.Contract(abi, address, {
+      config: {contractDataInputFill: "both", transactionConfirmationBlocks: options.confirmations}
+    });
     this.options = options;
     this.abi = abi;
   }
@@ -141,26 +147,13 @@ export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
         const from = 
           account?.address || (await (this.web3.eth as any).personal.getAccounts())[0];
 
-        /* eslint-disable no-inner-declarations */
-        function onConfirmation(number: number, receipt: unknown) {
-          if (DEFAULT_CONFIRMATIONS_NEEDED >= number)
-            resolve(receipt as TransactionReceipt);
-        }
-
-        function onError(error: any) {
-          reject(error);
-        }
-        /* eslint-enable no-inner-declarations */
-
         if (account) {
-          this.sendSignedTx(account, limbo.encodeABI(), undefined, await this.txOptions(limbo, "0x0", from))
-            .then(r => onConfirmation(DEFAULT_CONFIRMATIONS_NEEDED, r))
-            .catch(onError);
+          // eslint-disable-next-line max-len
+          this.sendSignedTx(account, limbo.encodeABI(), undefined, await this.txOptions(limbo, "0x0", from), this.options)
+            .then(resolve)
+            .catch(reject);
         } else
-          limbo.send({from, ...await this.txOptions(limbo, undefined, from)})
-               .on(`receipt`, d => onConfirmation(DEFAULT_CONFIRMATIONS_NEEDED, d))
-               .on(`error`, onError);
-
+          this.sendUnsignedTx(limbo as any, undefined).then(resolve).catch(reject)
       } catch (e: any) {
         reject(e as Error);
       }
@@ -173,12 +166,13 @@ export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
   /**
    * Sends a signed transaction with the provided account
    */
-  sendSignedTx(account: Web3BaseWalletAccount,
+  async sendSignedTx(account: Web3BaseWalletAccount,
                data: string,
                value = "0x0",
                txOptions: Partial<Transaction>, {
                  debug,
-                 customTransactionHandler: cb
+                 customTransactionHandler: cb,
+                 confirmations,
                }: Partial<Web3ConnectionOptions> = {}): Promise<TransactionReceipt> {
     /* eslint-disable no-async-promise-executor */
     return new Promise<TransactionReceipt>(async (resolve, reject) => {
@@ -193,7 +187,7 @@ export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
         if (cb)
           cb(sendMethod() as any, resolve, reject, debug);
         else
-          transactionHandler(sendMethod(), resolve, reject, debug);
+          transactionHandler(sendMethod(), resolve, reject, debug, confirmations);
 
       } catch (e) {
         console.error(`signedTxError`, e);
@@ -202,4 +196,33 @@ export class Web3Contract<Abi extends ContractAbi = AbiFragment[]> {
     }).then((receipt) => this.parseReceiptLogs(receipt))
     /* eslint-enable no-async-promise-executor */
   }
+
+  /* eslint-disable no-async-promise-executor */
+  /**
+   * Send unsigned transaction
+   */
+  async sendUnsignedTx(method: PayableMethodObject|NonPayableMethodObject,
+    value?: any, {
+      debug,
+      customTransactionHandler: cb, confirmations = 1,
+    }: Partial<Web3ConnectionOptions> = {}): Promise<TransactionReceipt> {
+    const from = (await this.web3.eth.personal.getAccounts())?.[0];
+
+    return new Promise<TransactionReceipt>(async (resolve, reject) => {
+      try {
+        const options = await this.txOptions(method, value, from);
+        const sendMethod = () => method.send({from, value, ...options});
+
+        if (cb)
+          cb(sendMethod() as any, resolve, reject, debug)
+        else
+          transactionHandler(sendMethod(), resolve, reject, debug, confirmations)
+      } catch (e) {
+        if (debug)
+          console.error(e);
+        reject(e);
+      }
+    }).then(receipt => this.parseReceiptLogs(receipt));
+  }
+  /* eslint-enable no-async-promise-executor */
 }

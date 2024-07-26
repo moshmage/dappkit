@@ -60,4 +60,10 @@ export interface Web3ConnectionOptions {
    * @default true
    */
   restartModelOnDeploy?: boolean;
+
+  /**
+   * Minimum confirmations needed to return a receipt
+   * @default 1
+   */
+  confirmations?: number;
 }

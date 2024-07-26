@@ -17,6 +17,10 @@ module.exports = {
   },
   networks: {
     hardhat: {
+      mining: {
+        auto: true,
+        interval: 1000
+      },
       accounts: {
         mnemonic: CI_MNEMONIC, accountsBalance: ACCOUNT_BALANCE, count: 10
       }
