@@ -17,7 +17,6 @@ export * from '@base/web3-contract';
 export * from '@base/governed';
 
 export * from '@interfaces/deployable';
-export * from '@interfaces/ipfs-options';
 export * from '@interfaces/bepro/network-merge';
 export * from '@interfaces/bepro/network-issue';
 export * from '@interfaces/bepro/treasury-info';
