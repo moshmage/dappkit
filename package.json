@@ -36,7 +36,6 @@
   "dependencies": {
     "bignumber.js": "^9.1.1",
     "date-fns": "^2.27.0",
-    "ipfs-http-client": "^50.1.2",
     "web3": "4.10.0"
   },
   "devDependencies": {
@@ -49,8 +48,6 @@
     "@types/yargs": "^17.0.7",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
-    "@uniswap/v3-core": "^1.0.1",
-    "@uniswap/v3-periphery": "^1.1.1",
     "chai": "^4.3.4",
     "chai-like": "^1.1.1",
     "chai-things": "^0.2.0",

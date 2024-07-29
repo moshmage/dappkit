@@ -14,7 +14,6 @@ export * from '@base/model';
 export * from '@base/ownable';
 export * from '@base/web3-connection';
 export * from '@base/web3-contract';
-export * from '@base/ipfs-wrapper';
 export * from '@base/governed';
 
 export * from '@interfaces/deployable';
