@@ -74,7 +74,7 @@ describe(`Network_Registry`, () => {
 
     describe(`Green Path`, () => {
       it (`Parameters on contract should be the same of deployment`, async () => {
-        expect(await registry.erc20()).to.eq(erc20Address);
+        expect((await registry.erc20()).toLowerCase()).to.eq(erc20Address);
         expect(+(await registry.lockAmountForNetworkCreation())).to.eq(lockAmountForNetworkCreation);
         expect(+(await registry.networkCreationFeePercentage())).to.eq(lockFeePercentage / registry.divisor);
       });
