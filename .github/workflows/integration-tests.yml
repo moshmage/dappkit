@@ -15,6 +15,7 @@ jobs:
       matrix:
         node-version: [21.1.0]
         environment: [build]
+    environment: build
     steps:
       - uses: actions/checkout@v3
       - name: Install Node.js ${{ matrix.node-version }}
