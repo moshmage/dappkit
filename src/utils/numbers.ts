@@ -1,7 +1,8 @@
 import BigNumber from 'bignumber.js';
 
-const shiftByFixed = (value: string|number|BigNumber, shiftBy: number, rounding: number|null = null) =>
-  new BigNumber(value).shiftedBy(shiftBy).toFixed(rounding ? 0 : null as any, rounding as any)
+const shiftByFixed = (value: string|number|BigNumber, shiftBy: number,
+                      rounding: BigNumber.RoundingMode|undefined = undefined) =>
+  new BigNumber(value).shiftedBy(shiftBy).toFixed(rounding ? 0 : 5, rounding)
 
 /**
  * convert a simple number into a big number representation, usually used to convert
@@ -11,7 +12,8 @@ const shiftByFixed = (value: string|number|BigNumber, shiftBy: number, rounding:
  * @param {number} rounding
  * @return {string}
  */
-export function toSmartContractDecimals(value: string|number, decimals = 18, rounding:number|null = null) {
+export function toSmartContractDecimals(value: string|number, decimals = 18,
+                                        rounding:BigNumber.RoundingMode|undefined = undefined) {
   return shiftByFixed(value, +decimals, rounding);
 }
 
@@ -24,7 +26,7 @@ export function toSmartContractDecimals(value: string|number, decimals = 18, rou
  */
 export function fromSmartContractDecimals(value: string | number | BigNumber | bigint,
                                           decimals = 18,
-                                          rounding: number | null = null) {
+                                          rounding: BigNumber.RoundingMode|undefined = undefined) {
   return shiftByFixed(value.toString(), -(+decimals), rounding);
 }
 

@@ -48,7 +48,7 @@ export class Model<Abi extends ContractAbi> {
       auto: true,
       debug: this.web3Connection.options.debug,
       ...contractOptions,
-    } as any;
+    } as never;
 
     if (this.web3Connection.started)
       this.loadAbi(); // no need to call .start() be cause .start calls web3connection.start first
@@ -110,6 +110,7 @@ export class Model<Abi extends ContractAbi> {
    * Return a property value from the contract
    * @see <method.call()>
    */
+  // eslint-disable-next-line class-methods-use-this
   async callTx<ForceOutput>(method: PayableMethodObject|NonPayableMethodObject) {
     return method.call<ForceOutput>();
   }
@@ -118,7 +119,7 @@ export class Model<Abi extends ContractAbi> {
    * Interact with, or change a value of, a property on the contract
    */
   async sendTx<Outputs = unknown>(method: PayableMethodObject|NonPayableMethodObject,
-               value?: any): Promise<TransactionReceipt<Outputs>> {
+               value?: never): Promise<TransactionReceipt<Outputs>> {
     if (this.connection.Account)
       return this.contract.sendSignedTx(this.connection.Account,
                                         method.encodeABI(),

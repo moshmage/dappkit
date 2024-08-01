@@ -26,7 +26,7 @@ export interface Web3ConnectionOptions {
   /**
    * Pass a custom provider instead
    */
-  web3CustomProvider?: SupportedProviders<never>;
+  web3CustomProvider?: SupportedProviders;
 
   /**
    * Skip the assignment of `window.web3 = Web3`
@@ -41,13 +41,13 @@ export interface Web3ConnectionOptions {
   debug?: boolean;
 
 
-
+  /* eslint-disable @typescript-eslint/no-unused-vars */
   // eslint-disable-next-line max-len
   customTransactionHandler?: <ResolveType = unknown, EventMap extends Web3EventMap = never>(event: Web3PromiEvent<ResolveType, EventMap>,
                                                                                 resolve: (data: never) => void,
                                                                                 reject: (e: unknown) => void,
                                                                                 debug?: boolean) => void;
-
+  /* eslint-enable @typescript-eslint/no-unused-vars */
   /**
    * If true, web3Connection will call `.start()` on construction
    * @default true

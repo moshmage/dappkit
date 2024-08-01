@@ -2,7 +2,7 @@ import {TransactionReceipt} from "web3-types";
 import {type Web3PromiEvent} from "web3-core";
 
 
-type ResolveReject = (value?: any | unknown) => void;
+type ResolveReject = (_value?: any | unknown) => void;
 
 export function transactionHandler(transaction: Web3PromiEvent<TransactionReceipt, Record<string, unknown>>,
                                    resolve: ResolveReject,

@@ -19,7 +19,9 @@ export class Web3Connection {
       this.options.restartModelOnDeploy = true;
 
     const providerConnected = provider &&
-      typeof provider !== "string" && provider.hasOwnProperty('connected') && (provider as any).connected;
+      typeof provider !== "string"
+      && provider.hasOwnProperty('connected')
+      && (provider as unknown as {connected: boolean}).connected;
 
     if (autoStart || providerConnected)
       this.start();

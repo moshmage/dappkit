@@ -29,7 +29,7 @@
     "test": "npm run mocha-mug -- 'test/**/*.spec.{ts,tsx}' --pretty",
     "test-ci": "npm run hardhat:start >/dev/null & npm run test",
     "eslint": "eslint --ignore-path .eslintignore --ext .ts ./src",
-    "lint": "npm run eslint -- --quiet",
+    "lint": "npm run eslint",
     "lint-fix": "npm run eslint -- --quiet --fix",
     "dk-transpile": "dlt -j dk-config.json"
   },
