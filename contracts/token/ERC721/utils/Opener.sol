@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../../../access/Ownable.sol";
 
 contract Opener is  Ownable {
-    using SafeMath for uint256;
+    using Math for uint256;
 
     ERC20 public _purchaseToken;
     address public _baseFeeAddress;
@@ -51,7 +52,7 @@ contract Opener is  Ownable {
 
     function _openPack(uint256 amount) internal {
         require(!_closed, "Opener is locked");
-        uint256 totalPrice = _pricePerPack.mul(amount);
+        (, uint256 totalPrice) = _pricePerPack.tryMul(amount);
 
         require(_purchaseToken.allowance(msg.sender, address(this)) >= totalPrice, "Not enough money per pack");
 
@@ -60,7 +61,7 @@ contract Opener is  Ownable {
         require(amount <= MAX_PURCHASE, "Max purchase per tx reached");
 
         if(_isLimited){
-            require(_limitedAmount >= _openedPacks.add(amount), "Amount of packs not available");
+            require(_limitedAmount >= _openedPacks + amount, "Amount of packs not available");
         }
 
         _distributePackShares(from, totalPrice);
@@ -68,7 +69,7 @@ contract Opener is  Ownable {
         emit Opening(from, amount, _openedPacks);
         _openedPacks += amount;
 
-        for(uint i = _currentTokenId; i < _currentTokenId.add(amount); i++){
+        for(uint i = _currentTokenId; i < _currentTokenId + amount; i++){
             registeredIDs[msg.sender][i] = true;
             registeredIDsArray[msg.sender].push(i);
         }
@@ -80,7 +81,7 @@ contract Opener is  Ownable {
         //transfer of fee share
         _purchaseToken.transferFrom(from, _baseFeeAddress, (amount * _baseFeeShare) / 100);
 
-        if(address(_feeShare) != address(0)){
+        if(_feeShare != 0){
             //transfer of stake share
             _purchaseToken.transferFrom(
                 from,

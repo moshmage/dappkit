@@ -1,13 +1,13 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 
 contract ERC20Distribution is Pausable, Ownable {
-    using SafeMath for uint256;
+    using Math for uint256;
 
     uint256 constant public decimals = 1 ether;
     address[] public tokenOwners ; /* Tracks distributions mapping (iterable) */
@@ -27,7 +27,7 @@ contract ERC20Distribution is Pausable, Ownable {
         uint256 amountSent;
     }
 
-    constructor() {}
+    constructor() Ownable(_msgSender()) {}
 
     function setTokenAddress(IERC20 _tokenAddress) external onlyOwner whenNotPaused  {
         erc20 = _tokenAddress;
@@ -51,7 +51,7 @@ contract ERC20Distribution is Pausable, Ownable {
         /* TGE has not started */
         require(block.timestamp > TGEDate, "TGE still hasn't started");
         /* Test that the call be only done once per day */
-        require(block.timestamp.sub(lastDateDistribution) > 1 days, "Can only be called once a day");
+        require(block.timestamp - lastDateDistribution > 1 days, "Can only be called once a day");
         lastDateDistribution = block.timestamp;
         /* Go thru all tokenOwners */
         for(uint i = 0; i < tokenOwners.length; i++) {
@@ -59,13 +59,13 @@ contract ERC20Distribution is Pausable, Ownable {
             DistributionStep[] memory d = distributions[tokenOwners[i]];
             /* Go thru all distributions array */
             for(uint j = 0; j < d.length; j++){
-                if( (block.timestamp.sub(TGEDate) > d[j].unlockDay) /* Verify if unlockDay has passed */
+                if( (block.timestamp + TGEDate > d[j].unlockDay) /* Verify if unlockDay has passed */
                     && (d[j].currentAllocated > 0) /* Verify if currentAllocated > 0, so that address has tokens to be sent still */
                 ){
                     uint256 sendingAmount;
                     sendingAmount = d[j].currentAllocated;
-                    distributions[tokenOwners[i]][j].currentAllocated = distributions[tokenOwners[i]][j].currentAllocated.sub(sendingAmount);
-                    distributions[tokenOwners[i]][j].amountSent = distributions[tokenOwners[i]][j].amountSent.add(sendingAmount);
+                    distributions[tokenOwners[i]][j].currentAllocated = distributions[tokenOwners[i]][j].currentAllocated - sendingAmount;
+                    distributions[tokenOwners[i]][j].amountSent = distributions[tokenOwners[i]][j].amountSent + sendingAmount;
                     require(erc20.transfer(tokenOwners[i], sendingAmount));
                 }
             }

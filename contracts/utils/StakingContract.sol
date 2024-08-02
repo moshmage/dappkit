@@ -1,15 +1,15 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../access/Ownable.sol";
 
 contract StakingContract is Pausable, Ownable {
-    using SafeMath for uint256;
+    using Math for uint256;
 
     mapping(uint256 => ProductAPR) public products; /* Available Products */
     uint256[] public productIds; /* Available Product Ids*/
@@ -71,7 +71,8 @@ contract StakingContract is Pausable, Ownable {
 
     /* Available Tokens to he APRed by future subscribers */
     function availableTokens() public view returns (uint256) {
-        return heldTokens().sub(futureLockedTokens());
+        (, uint256 result) = heldTokens().trySub(futureLockedTokens());
+        return result;
     }
 
     function subscribeProduct(uint256 _product_id, uint256 _amount) external whenNotPaused {
@@ -114,14 +115,15 @@ contract StakingContract is Pausable, Ownable {
         require(erc20.transferFrom(msg.sender, address(this), _amount), "Transfer Failed");
 
         /* Add to LockedTokens */
-        lockedTokens = lockedTokens.add(_amount.add(futureAPRAmount));
+        (, uint256 newFutureAmount) = _amount.tryAdd(futureAPRAmount);
+        (, uint256 newLockedTokens) = lockedTokens.tryAdd(newFutureAmount);
+        lockedTokens = newLockedTokens;
 
         uint256 subscription_id = incrementId;
         incrementId = incrementId + 1;
 
         /* Create SubscriptionAPR Object */
-        SubscriptionAPR memory subscriptionAPR = SubscriptionAPR(subscription_id, _product_id, time, products[_product_id].endDate, _amount,
-        msg.sender, products[_product_id].APR, false, 0);
+        SubscriptionAPR memory subscriptionAPR = SubscriptionAPR(subscription_id, _product_id, time, products[_product_id].endDate, _amount, msg.sender, products[_product_id].APR, false, 0);
 
         /* Create new subscription */
         mySubscriptions[msg.sender].push(subscription_id);
@@ -160,7 +162,13 @@ contract StakingContract is Pausable, Ownable {
 
 
     function getAPRAmount(uint256 _APR, uint256 _startDate, uint256 _endDate, uint256 _amount) public pure returns(uint256) {
-        return ((_endDate.sub(_startDate)).mul(_APR).mul(_amount)).div(year.mul(100));
+        (, uint256 timestamp) = _endDate.trySub(_startDate);
+        (, uint256 timestampAPR) = timestamp.tryMul(_APR);
+        (, uint256 APRAmount) = timestampAPR.tryMul(_amount);
+        (, uint256 yearMul) = year.tryMul(100);
+        (, uint256 result) = APRAmount.tryDiv(yearMul);
+
+        return result;
     }
 
     function getProductIds() public view returns(uint256[] memory) {
@@ -202,8 +210,8 @@ contract StakingContract is Pausable, Ownable {
 
         uint256 APRedAmount = getAPRAmount(subscription.APR, subscription.startDate, finishDate, subscription.amount);
         require(APRedAmount > 0, "APR amount has to be bigger than 0");
-        uint256 totalAmount = subscription.amount.add(APRedAmount);
-        uint256 totalAmountWithFullAPR = subscription.amount.add(getAPRAmount(subscription.APR, subscription.startDate, products[_product_id].endDate, subscription.amount));
+        (, uint256 totalAmount) = subscription.amount.tryAdd(APRedAmount);
+        (, uint256 totalAmountWithFullAPR) = subscription.amount.tryAdd(getAPRAmount(subscription.APR, subscription.startDate, products[_product_id].endDate, subscription.amount));
         require(totalAmount > 0, "Total Amount has to be bigger than 0");
 
         /* Update Subscription */
@@ -215,7 +223,8 @@ contract StakingContract is Pausable, Ownable {
         require(erc20.transfer(subscription.subscriberAddress, totalAmount), "Transfer has failed");
 
         /* Sub to LockedTokens */
-        lockedTokens = lockedTokens.sub(totalAmountWithFullAPR);
+        (, uint256 newLockedTokens) = lockedTokens.trySub(totalAmountWithFullAPR);
+        lockedTokens = newLockedTokens;
     }
 
     function getSubscription(uint256 _subscription_id, uint256 _product_id) external view returns (uint256, uint256, uint256, uint256, uint256, address, uint256, bool, uint256){

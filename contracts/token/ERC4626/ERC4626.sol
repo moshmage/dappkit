@@ -1,18 +1,17 @@
 // SPDX-License-Identifier: MIT
 // OpenZeppelin Contracts (last updated v4.7.0) (token/ERC20/extensions/ERC4626.sol)
 
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
-import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "./IERC4626.sol";
-import "../../math/SaferMath.sol";
 import "../ERC20/IERC20View.sol";
 
 
 contract ERC4626 is ERC20 {
-    using SaferMath for uint256;
+    using Math for uint256;
 
     IERC20 private immutable _asset;
     uint8 private immutable _decimals;
@@ -31,7 +30,7 @@ contract ERC4626 is ERC20 {
      * @dev Set the underlying asset contract. This must be an ERC20-compatible contract (ERC20 or ERC777).
      */
     constructor(IERC20 asset_, string memory name_, string memory symbol_) public ERC20(name_, symbol_) {
-        (bool success, uint8 assetDecimals) = _tryGetAssetDecimals(asset_);
+        (, uint8 assetDecimals) = _tryGetAssetDecimals(asset_);
         _decimals = super.decimals();
         _asset = asset_;
     }
@@ -74,12 +73,12 @@ contract ERC4626 is ERC20 {
 
     /** @dev See {IERC4626-convertToShares}. */
     function convertToShares(uint256 assets) public view virtual  returns (uint256 shares) {
-        return _convertToShares(assets, SaferMath.Rounding.Down);
+        return _convertToShares(assets, Math.Rounding.Floor);
     }
 
     /** @dev See {IERC4626-convertToAssets}. */
     function convertToAssets(uint256 shares) public view virtual  returns (uint256 assets) {
-        return _convertToAssets(shares, SaferMath.Rounding.Down);
+        return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
     /** @dev See {IERC4626-maxDeposit}. */
@@ -94,7 +93,7 @@ contract ERC4626 is ERC20 {
 
     /** @dev See {IERC4626-maxWithdraw}. */
     function maxWithdraw(address owner) public view virtual  returns (uint256) {
-        return _convertToAssets(balanceOf(owner), SaferMath.Rounding.Down);
+        return _convertToAssets(balanceOf(owner), Math.Rounding.Floor);
     }
 
     /** @dev See {IERC4626-maxRedeem}. */
@@ -104,22 +103,22 @@ contract ERC4626 is ERC20 {
 
     /** @dev See {IERC4626-previewDeposit}. */
     function previewDeposit(uint256 assets) public view virtual  returns (uint256) {
-        return _convertToShares(assets, SaferMath.Rounding.Down);
+        return _convertToShares(assets, Math.Rounding.Floor);
     }
 
     /** @dev See {IERC4626-previewMint}. */
     function previewMint(uint256 shares) public view virtual  returns (uint256) {
-        return _convertToAssets(shares, SaferMath.Rounding.Up);
+        return _convertToAssets(shares, Math.Rounding.Ceil);
     }
 
     /** @dev See {IERC4626-previewRedeem}. */
     function previewRedeem(uint256 shares) public view virtual  returns (uint256) {
-        return _convertToAssets(shares, SaferMath.Rounding.Down);
+        return _convertToAssets(shares, Math.Rounding.Floor);
     }
 
     /** @dev See {IERC4626-previewWithdraw}. */
     function previewWithdraw(uint256 assets) public view virtual  returns (uint256) {
-        return _convertToShares(assets, SaferMath.Rounding.Up);
+        return _convertToShares(assets, Math.Rounding.Ceil);
     }
 
     /** @dev See {IERC4626-deposit}. */
@@ -201,7 +200,7 @@ contract ERC4626 is ERC20 {
      * Will revert if assets > 0, totalSupply > 0 and totalAssets = 0. That corresponds to a case where any asset
      * would represent an infinite amount of shares.
      */
-    function _convertToShares(uint256 assets, SaferMath.Rounding rounding) internal view virtual returns (uint256 shares) {
+    function _convertToShares(uint256 assets, Math.Rounding rounding) internal view virtual returns (uint256 shares) {
         uint256 supply = totalSupply();
         return (assets == 0 || supply == 0)
         ? _initialConvertToShares(assets, rounding)
@@ -215,7 +214,7 @@ contract ERC4626 is ERC20 {
      */
     function _initialConvertToShares(
         uint256 assets,
-        SaferMath.Rounding /*rounding*/
+        Math.Rounding /*rounding*/
     ) internal view virtual returns (uint256 shares) {
         return assets;
     }
@@ -223,7 +222,7 @@ contract ERC4626 is ERC20 {
     /**
      * @dev Internal conversion function (from shares to assets) with support for rounding direction.
      */
-    function _convertToAssets(uint256 shares, SaferMath.Rounding rounding) internal view virtual returns (uint256 assets) {
+    function _convertToAssets(uint256 shares, Math.Rounding rounding) internal view virtual returns (uint256 assets) {
         uint256 supply = totalSupply();
         return
         (supply == 0) ? _initialConvertToAssets(shares, rounding) : shares.mulDiv(totalAssets(), supply, rounding);
@@ -236,7 +235,7 @@ contract ERC4626 is ERC20 {
      */
     function _initialConvertToAssets(
         uint256 shares,
-        SaferMath.Rounding /*rounding*/
+        Math.Rounding /*rounding*/
     ) internal view virtual returns (uint256 assets) {
         return shares;
     }
@@ -265,18 +264,6 @@ contract ERC4626 is ERC20 {
         IERC20(_asset).transfer(receiver, assets);
 
         emit Withdraw(caller, receiver, owner, assets, shares);
-    }
-
-    function _spendAllowance(
-        address owner,
-        address spender,
-        uint256 amount
-    ) internal virtual {
-        uint256 currentAllowance = allowance(owner, spender);
-        if (currentAllowance != type(uint256).max) {
-            require(currentAllowance >= amount, "ERC20: insufficient allowance");
-            _approve(owner, spender, currentAllowance - amount);
-        }
     }
 
     function _isVaultCollateralized() private view returns (bool) {

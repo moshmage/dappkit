@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
@@ -13,7 +13,7 @@ contract ERC20CappedToken is ERC20, Ownable {
         string memory _symbol,
         uint256 _supplyCap,
         address _distributionContract
-    ) public ERC20(_name, _symbol) {
+    ) public ERC20(_name, _symbol) Ownable(_msgSender()) {
         supplyCap = _supplyCap;
         _mint(_distributionContract, _supplyCap);
     }

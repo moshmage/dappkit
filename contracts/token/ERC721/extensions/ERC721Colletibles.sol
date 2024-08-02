@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "../utils/Opener.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract ERC721Collectibles is Opener, ERC721 {
+contract ERC721Collectibles is Opener, ERC721URIStorage {
 
     constructor (
         string memory name, string memory symbol,
@@ -15,16 +15,14 @@ contract ERC721Collectibles is Opener, ERC721 {
         address feeAddress,
         address otherAddress) public ERC721(name, symbol) Opener(_purchaseToken, baseFeeAddress, feeAddress, otherAddress, limitedAmount) {}
 
-    function exists(uint256 tokenId) public view returns (bool) {
-        return _exists(tokenId);
-    }
+    string baseURI = "";
 
     function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
         _setTokenURI(tokenId, uri);
     }
 
-    function setBaseURI(string memory baseURI) public onlyOwner {
-        _setBaseURI(baseURI);
+    function setBaseURI(string memory _baseURI) public onlyOwner {
+        baseURI = _baseURI;
     }
 
     function mint(uint256 tokenIdToMint) public {

@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/utils/Pausable.sol";
-import "@openzeppelin/contracts/math/SafeMath.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract ERC20TokenLock is Pausable, Ownable {
-    using SafeMath for uint256;
+    using Math for uint256;
 	
 	IERC20 public erc20; //address of ERC20 token being held/locked by this contract
 	
@@ -43,7 +43,7 @@ contract ERC20TokenLock is Pausable, Ownable {
     /**
      * @dev Constructor
 	 */
-    constructor(address _erc20TokenAddress) public Ownable() Pausable() {
+    constructor(address _erc20TokenAddress) public Ownable(msg.sender) Pausable() {
 		erc20 = IERC20(_erc20TokenAddress);
     }
 	
@@ -104,7 +104,7 @@ contract ERC20TokenLock is Pausable, Ownable {
         lockedTokensMap[msg.sender].endDate = endDate;
         lockedTokensMap[msg.sender].amount = amount;
 		
-		totalAmountStaked = totalAmountStaked.add(amount);
+		totalAmountStaked = totalAmountStaked + amount;
 		emit TokensLocked(msg.sender, amount, block.timestamp, endDate);
 		return true;
 	}
@@ -120,7 +120,7 @@ contract ERC20TokenLock is Pausable, Ownable {
 		
 		uint amount = lockedTokensMap[msg.sender].amount;
 		lockedTokensMap[msg.sender].amount = 0;
-		totalAmountStaked = totalAmountStaked.sub(amount);
+		totalAmountStaked = totalAmountStaked - amount;
 		
 		require(erc20.transfer(msg.sender, amount), "transfer failed");
 		emit TokensReleased(msg.sender, amount, block.timestamp);

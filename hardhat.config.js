@@ -7,7 +7,7 @@ const ACCOUNT_BALANCE = "10000000000000000000000";
 
 module.exports = {
   solidity: {
-    version: "0.7.6",
+    version: "0.8.20",
     settings: {
       optimizer: {
         enabled: true,

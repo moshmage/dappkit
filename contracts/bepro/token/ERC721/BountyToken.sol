@@ -1,19 +1,20 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 pragma abicoder v2;
 
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "../../../access/Governed.sol";
 import "../../INetworkV2.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 /*
  * A BountyToken is a non-transferable NFT that tracks the record of participation of a certain address on a
  * @INetworkV2.Bounty
  */
-contract BountyToken is ERC721, Governed {
+contract BountyToken is ERC721URIStorage, Governed {
 
     address public dispatcher = address(0);
 
-    constructor(string memory name_, string memory symbol_, address _dispatcher) ERC721(name_, symbol_) Governed() {
+    constructor(string memory name_, string memory symbol_, address _dispatcher) ERC721URIStorage() ERC721(name_, symbol_) Governed() {
         dispatcher = _dispatcher;
     }
 
@@ -57,7 +58,6 @@ contract BountyToken is ERC721, Governed {
         dispatcher = dispatcher_;
     }
 
-    function transferFrom(address from, address to, uint256 tokenId) public override { revert(); }
-    function safeTransferFrom(address from, address to, uint256 tokenId) public override { revert(); }
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) public override { revert(); }
+    function transferFrom(address from, address to, uint256 tokenId) public override(ERC721, IERC721) { revert(); }
+    function safeTransferFrom(address from, address to, uint256 tokenId, bytes memory data) public override(ERC721, IERC721) { revert(); }
 }

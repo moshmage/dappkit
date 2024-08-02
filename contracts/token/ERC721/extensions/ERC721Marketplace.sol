@@ -1,13 +1,14 @@
-pragma solidity >=0.6.0;
+pragma solidity >=0.8.0;
 
 import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/utils/math/Math.sol";
 import "../../../access/Ownable.sol";
 import "../../../access/ReentrancyGuardOptimized.sol";
 
 contract ERC721Marketplace is Ownable, ReentrancyGuardOptimized {
 
-    using SafeMath for uint256;
+    using Math for uint256;
 
     ERC20 public erc20Address;
     IERC721 private erc721Address;
@@ -52,7 +53,7 @@ contract ERC721Marketplace is Ownable, ReentrancyGuardOptimized {
         sale.saleId = saleIncrementId;
         sale.tokenId = _tokenId;
         sale.price = _price;
-        sale.seller = msg.sender;
+        sale.seller = payable(msg.sender);
         sale.date = block.timestamp;
         sales[_tokenId] = sale;
         salesById[saleIncrementId] = _tokenId;
