@@ -1,4 +1,11 @@
-import {BountyToken, ERC20, Network_v2, NetworkRegistry, toSmartContractDecimals, Web3Connection} from '../../src';
+import {
+  BountyToken,
+  ERC20,
+  Network_v2,
+  NetworkRegistry,
+  toSmartContractDecimals,
+  Web3Connection
+} from '../../src';
 import {
   defaultWeb3Connection,
   erc20Deployer,
@@ -115,37 +122,37 @@ describe(`NetworkV2`, () => {
         it(`Asserts that locked amount matches conversion`, async () => {
           await hasTxBlockNumber(networkToken.approve(network.contractAddress!, AMOUNT_1M));
           await hasTxBlockNumber(network.lock(`104999.999999999999999`));
-          expect(await network.getOraclesOf(Admin.address)).to.be.eq(`209999.999999999999998`); // * 2 rate
-          await hasTxBlockNumber(network.unlock(`209999.999999999999998`));
+          expect(await network.getOraclesOf(Admin.address)).to.be.eq(`209999.999999999999998000`); // * 2 rate
+          await hasTxBlockNumber(network.unlock(`209999.999999999999998000`));
         })
 
         it(`Locks NT and receives Network Stake Token`, async () => {
           await hasTxBlockNumber(networkToken.approve(network.contractAddress!, AMOUNT_1M));
           await hasTxBlockNumber(network.lock(205000));
-          expect(await network.getOraclesOf(Admin.address)).to.be.eq((205000 * 2).toString()); // we made a 1:2
-          expect(await networkToken.getTokenAmount(Admin.address)).to.be.eq((AMOUNT_1M - 205000).toString());
+          expect(await network.getOraclesOf(Admin.address)).to.be.eq('410000.000000000000000000'); // we made a 1:2
+          expect(await networkToken.getTokenAmount(Admin.address)).to.be.eq('795000.000000000000000000');
         });
 
         it(`Delegates to Alice`, async () => {
           await hasTxBlockNumber(network.delegateOracles(103000, Alice.address));
-          expect(await network.getOraclesOf(Admin.address)).to.be.eq(((205000 * 2) - 103000).toString());
-          expect(await network.getOraclesOf(Alice.address)).to.be.eq((103000).toString());
+          expect(await network.getOraclesOf(Admin.address)).to.be.eq('307000.000000000000000000');
+          expect(await network.getOraclesOf(Alice.address)).to.be.eq('103000.000000000000000000');
 
           const aliceDelegation = (await network.getDelegationsOf(Admin.address)).find(({ to }) => to === Alice.address);
           if (aliceDelegation)
-            expect(aliceDelegation.amount).to.be.eq((103000).toString());
+            expect(aliceDelegation.amount).to.be.eq('103000.000000000000000000');
         });
 
         it(`Takes back from Alice`, async () => {
           await hasTxBlockNumber(network.takeBackOracles(0));
-          expect(await network.getOraclesOf(Alice.address)).to.be.eq((0).toString());
-          expect(await network.getOraclesOf(Admin.address)).to.be.eq((205000 * 2).toString());
+          expect(await network.getOraclesOf(Alice.address)).to.be.eq('0.000000000000000000');
+          expect(await network.getOraclesOf(Admin.address)).to.be.eq('410000.000000000000000000');
         })
 
         it(`Unlocks NST and receives Network Token`, async () => {
           await hasTxBlockNumber(network.unlock(200000)); // because 2:1
-          expect(await network.getOraclesOf(Admin.address)).to.be.eq((105000 * 2).toString());
-          expect(await networkToken.getTokenAmount(Admin.address)).to.be.eq((AMOUNT_1M - 105000).toString());
+          expect(await network.getOraclesOf(Admin.address)).to.be.eq('210000.000000000000000000');
+          expect(await networkToken.getTokenAmount(Admin.address)).to.be.eq('895000.000000000000000000');
         });
 
         it(`Oracles Changed`, async () => {
@@ -170,7 +177,7 @@ describe(`NetworkV2`, () => {
 
           const events = await network.getBountyCreatedEvents({fromBlock: receipt.blockNumber, filter: {creator: Admin.address}}) as EventLog[];
 
-          expect(await bountyTransactional.balanceOf(network.contractAddress!)).to.eq((1000).toString());
+          expect(await bountyTransactional.balanceOf(network.contractAddress!)).to.eq('1000.000000000000000000');
           expect(events.length).to.be.eq(1);
           expect(events[0].returnValues.cid).to.be.eq('c1');
           expect((await network.getBountiesOfAddress(Admin.address)).length).to.be.eq(1);
@@ -183,7 +190,7 @@ describe(`NetworkV2`, () => {
         it(`Updates bounty amount`, async () => {
           await expectEvent(network.updateBountyAmount(bountyId, 1001), 'BountyAmountUpdated', {amount: BigInt(toSmartContractDecimals(1001))});
           expect((await network.getBounty(bountyId)).tokenAmount).to.be.eq((1001));
-          expect(await bountyTransactional.getTokenAmount(network.contractAddress!)).to.eq((1001).toString());
+          expect(await bountyTransactional.getTokenAmount(network.contractAddress!)).to.eq('1001.000000000000000000');
         });
 
         it(`Cancels bounty`, async () => {
@@ -192,7 +199,7 @@ describe(`NetworkV2`, () => {
           const events = await network.getBountyCanceledEvents({fromBlock: receipt.blockNumber, filter: {id: bountyId}});
           expect(events.length).to.be.eq(1);
           expect(await network.openBounties()).to.be.eq(0);
-          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq((10000).toString())
+          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('10000.000000000000000000')
         });
 
         describe(`Hard cancels a bounty`,() => {
@@ -253,8 +260,8 @@ describe(`NetworkV2`, () => {
 
           web3Connection.switchToAccount(Admin.privateKey);
           await hasTxBlockNumber(network.cancelFundRequest(bountyId));
-          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq((10000).toString());
-          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq((10000).toString());
+          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('10000.000000000000000000');
+          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq('10000.000000000000000000');
         })
 
         it(`Opens Request Funding and Reward`, async () => {
@@ -292,8 +299,8 @@ describe(`NetworkV2`, () => {
         it(`Cancel funding with reward token`, async () => {
           web3Connection.switchToAccount(Admin.privateKey);
           await hasTxBlockNumber(network.cancelFundRequest(bountyId));
-          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq((10000).toString());
-          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq((10000).toString());
+          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('10000.000000000000000000');
+          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq('10000.000000000000000000');
         })
       });
 
@@ -382,23 +389,16 @@ describe(`NetworkV2`, () => {
 
           await hasTxBlockNumber(network.closeBounty(bountyId, 2), `Should have closed bounty`);
 
-          const bountyTokenAmount = +bounty.tokenAmount;
-          const mergerAmount = bountyTokenAmount / 100 * await network.mergeCreatorFeeShare();
-          const proposerAmount = (bountyTokenAmount - mergerAmount) / 100 * await network.proposerFeeShare();
-          const bountyAmount = bountyTokenAmount - mergerAmount - proposerAmount;
-          const AliceAmount = bountyAmount / 100 * 51;
-          const BobAmount = bountyAmount / 100 * 49;
-
           expect(await network.openBounties()).to.be.eq(0);
-          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq(Number(AliceAmount).toFixed(2));
-          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq(Number(BobAmount + 10000).toFixed(2));
+          expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('4998.510000000000000000');
+          expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq('14802.490000000000000000');
         });
 
         it(`Alice withdraws from bounty`, async () => {
           await hasTxBlockNumber(network.withdrawFundingReward(bountyId, 0));
-          expect(await rewardToken.balanceOf(Alice.address)).to.be.eq((500).toString());
+          expect(await rewardToken.balanceOf(Alice.address)).to.be.eq('500.000000000000000000');
           await hasTxBlockNumber(network.withdrawFundingReward(bountyId, 1));
-          expect(await rewardToken.balanceOf(Alice.address)).to.be.eq((1000).toString());
+          expect(await rewardToken.balanceOf(Alice.address)).to.be.eq('1000.000000000000000000');
         });
       });
     });

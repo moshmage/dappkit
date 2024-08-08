@@ -51,7 +51,7 @@ export class ERC4626 extends Model<typeof artifact.abi> implements Deployable {
 
   async balanceOf(account: string) {
     return fromSmartContractDecimals(await this.callTx(this.contract
-      .methods.balanceOf(account)), this._decimals, 3);
+      .methods.balanceOf(account)), this._decimals);
   }
 
   async decreaseAllowance(spender: string, subtractedValue: number) {
@@ -72,7 +72,7 @@ export class ERC4626 extends Model<typeof artifact.abi> implements Deployable {
   }
 
   async totalSupply() { 
-    return fromSmartContractDecimals(await this.callTx(this.contract.methods.totalSupply()), this._decimals, 3);
+    return fromSmartContractDecimals(await this.callTx(this.contract.methods.totalSupply()), this._decimals);
   }
 
   async transfer(recipient: string, amount: number) { 
@@ -98,7 +98,7 @@ export class ERC4626 extends Model<typeof artifact.abi> implements Deployable {
   }
 
   async totalAssets() {
-    return fromSmartContractDecimals(await this.callTx(this.contract.methods.totalAssets()), this._decimals, 3);
+    return fromSmartContractDecimals(await this.callTx(this.contract.methods.totalAssets()), this._decimals);
   }
 
   async convertToShares(assets: number) { 
@@ -148,7 +148,7 @@ export class ERC4626 extends Model<typeof artifact.abi> implements Deployable {
       .previewRedeem(toSmartContractDecimals(shares, this._decimals, 3))), this.asset?.decimals, 3);
   }
 
-  async previewWithdraw(assets: number) { 
+  async previewWithdraw(assets: number|string) {
     return fromSmartContractDecimals(await this.callTx(this.contract
       .methods
       .previewWithdraw(toSmartContractDecimals(assets, this.asset?.decimals, 2))), this._decimals, 2);
@@ -163,12 +163,12 @@ export class ERC4626 extends Model<typeof artifact.abi> implements Deployable {
     return this.sendTx(this.contract.methods.mint(toSmartContractDecimals(shares, this._decimals, 3), receiver));
   }
 
-  async withdraw(assets: number, receiver: string, owner: string) { 
+  async withdraw(assets: number|string, receiver: string, owner: string) {
     return this.sendTx(this.contract
       .methods.withdraw(toSmartContractDecimals(assets, this.asset?.decimals, 3), receiver, owner));
   }
 
-  async redeem(shares: number, receiver: string, owner: string) { 
+  async redeem(shares: number|string, receiver: string, owner: string) {
     return this.sendTx(this.contract
       .methods.redeem(toSmartContractDecimals(shares, this._decimals, 3), receiver, owner));
   }

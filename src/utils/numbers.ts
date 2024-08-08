@@ -1,9 +1,5 @@
 import BigNumber from 'bignumber.js';
 
-const shiftByFixed = (value: string|number|BigNumber, shiftBy: number,
-                      rounding: BigNumber.RoundingMode|undefined = undefined) =>
-  new BigNumber(value).shiftedBy(shiftBy).toFixed(rounding ? 0 : 5, rounding)
-
 /**
  * convert a simple number into a big number representation, usually used to convert
  * to ERC20 token correct number
@@ -14,7 +10,7 @@ const shiftByFixed = (value: string|number|BigNumber, shiftBy: number,
  */
 export function toSmartContractDecimals(value: string|number, decimals = 18,
                                         rounding:BigNumber.RoundingMode|undefined = undefined) {
-  return shiftByFixed(value, +decimals, rounding);
+  return new BigNumber(value).shiftedBy(+decimals).toFixed(0, rounding)
 }
 
 /**
@@ -27,7 +23,10 @@ export function toSmartContractDecimals(value: string|number, decimals = 18,
 export function fromSmartContractDecimals(value: string | number | BigNumber | bigint,
                                           decimals = 18,
                                           rounding: BigNumber.RoundingMode|undefined = undefined) {
-  return shiftByFixed(value.toString(), -(+decimals), rounding);
+  if (typeof value === "bigint")
+    value = value as unknown as number; // bigint is accepted by bignumber but typescript says no
+
+  return new BigNumber(value).shiftedBy(-(+decimals)).toFixed(decimals, rounding)
 }
 
 /**
