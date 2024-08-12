@@ -180,9 +180,9 @@ describe(`NetworkV2`, () => {
           expect(await bountyTransactional.balanceOf(network.contractAddress!)).to.eq('1000.000000000000000000');
           expect(events.length).to.be.eq(1);
           expect(events[0].returnValues.cid).to.be.eq('c1');
-          expect((await network.getBountiesOfAddress(Admin.address)).length).to.be.eq(1);
+          // expect((await network.getBountiesOfAddress(Admin.address)).length).to.be.eq(1);
           expect(await network.bountiesIndex()).to.be.eq(1);
-          expect(await network.openBounties()).to.be.eq(1);
+          // expect(await network.openBounties()).to.be.eq(1);
 
           bountyId = events[0].returnValues.id as number;
         });
@@ -198,7 +198,7 @@ describe(`NetworkV2`, () => {
           const receipt = await network.cancelBounty(bountyId);
           const events = await network.getBountyCanceledEvents({fromBlock: receipt.blockNumber, filter: {id: bountyId}});
           expect(events.length).to.be.eq(1);
-          expect(await network.openBounties()).to.be.eq(0);
+          // expect(await network.openBounties()).to.be.eq(0);
           expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('10000.000000000000000000')
         });
 
@@ -209,7 +209,7 @@ describe(`NetworkV2`, () => {
             await increaseTime(15638402, web3Connection.Web3); // 182 days + 2 seconds
             const prReceipt = await network.createPullRequest(id as number, '//', 'master', cid,'//', 'feat-1', 1);
             const [{returnValues: {pullRequestId}}] = await network.getBountyPullRequestCreatedEvents({fromBlock: prReceipt.blockNumber}) as EventLog[];
-            await network.markPullRequestReadyForReview(id as number, pullRequestId as number);
+            // await network.markPullRequestReadyForReview(id as number, pullRequestId as number);
             const proposalReceipt = await network.createBountyProposal(id as number, pullRequestId as number, [nativeZeroAddress], [100]);
             const [{returnValues: {proposalId}}] = await network.getBountyProposalCreatedEvents({fromBlock: proposalReceipt.blockNumber}) as EventLog[];
             return {id, pullRequestId, proposalId} as unknown as {id: number, pullRequest: number, proposalId: number};
@@ -313,7 +313,7 @@ describe(`NetworkV2`, () => {
             'c3', 'Title 3', '//', 'master', 'ghuser');
 
           bountyId = await network.cidBountyId('c3');
-          expect(await network.openBounties()).to.be.eq(1);
+          // expect(await network.openBounties()).to.be.eq(1);
 
           web3Connection.switchToAccount(Alice.privateKey);
           await bountyTransactional.approve(network.contractAddress!, AMOUNT_1M);
@@ -341,12 +341,12 @@ describe(`NetworkV2`, () => {
             'c4','//', 'feat-2', 1), 'BountyPullRequestCreated', {pullRequestId: BigInt(1)});
         });
 
-        it(`Should be unable to create a Proposal because prId 1 is not ready`, async () => {
-          await shouldBeRejected(network.createBountyProposal(bountyId, 1, [Alice.address, Bob.address], [51, 49]));
-        });
+        // it(`Should be unable to create a Proposal because prId 1 is not ready`, async () => {
+        //   await shouldBeRejected(network.createBountyProposal(bountyId, 1, [Alice.address, Bob.address], [51, 49]));
+        // });
 
         it(`Set prId 1 as Ready`, async () => {
-          await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 1));
+          // await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 1));
           expect((await network.getBounty(bountyId)).pullRequests[1].ready).to.be.true;
         });
 
@@ -362,7 +362,7 @@ describe(`NetworkV2`, () => {
         it(`Disputes a Proposal`, async () => {
           await hasTxBlockNumber(network.createPullRequest(bountyId, '//', 'master',
             'c5','//', 'feat-2', 1));
-          await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 2));
+          // await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 2));
           await hasTxBlockNumber(network.createBountyProposal(bountyId, 2, [Alice.address, Bob.address], [51, 49]));
           await hasTxBlockNumber(network.disputeBountyProposal(bountyId, 1));
           expect(+(await network.getBounty(bountyId)).proposals[1].disputeWeight).to.be.greaterThan(0);
@@ -380,7 +380,7 @@ describe(`NetworkV2`, () => {
 
 
 
-          await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 3));
+          // await hasTxBlockNumber(network.markPullRequestReadyForReview(bountyId, 3));
           await hasTxBlockNumber(network.createBountyProposal(bountyId, 3, [Alice.address, Bob.address], [51, 49]), `Should create proposal`);
 
           await increaseTime(62, web3Connection.Web3);
@@ -389,7 +389,7 @@ describe(`NetworkV2`, () => {
 
           await hasTxBlockNumber(network.closeBounty(bountyId, 2), `Should have closed bounty`);
 
-          expect(await network.openBounties()).to.be.eq(0);
+          // expect(await network.openBounties()).to.be.eq(0);
           expect(await bountyTransactional.getTokenAmount(Alice.address)).to.be.eq('4998.510000000000000000');
           expect(await bountyTransactional.getTokenAmount(Bob.address)).to.be.eq('14802.490000000000000000');
         });

@@ -115,12 +115,12 @@ export class Network_v2 extends Model<typeof artifact.abi> implements Deployable
     return treasuryInfo(await this.callTx(this.contract.methods.treasuryInfo()), this.divisor);
   }
 
-  /**
-   * Returns the number of open bounties
-   */
-  async openBounties() {
-    return await this.bountiesIndex() - (await this.closedBounties() + await this.canceledBounties());
-  }
+  // /**
+  //  * Returns the number of open bounties
+  //  */
+  // async openBounties() {
+  //   return await this.bountiesIndex() - (await this.closedBounties() + await this.canceledBounties());
+  // }
 
   async councilAmount() {
     return fromSmartContractDecimals(await this.callTx(this.contract
@@ -190,9 +190,9 @@ export class Network_v2 extends Model<typeof artifact.abi> implements Deployable
                                      this.networkToken.decimals);
   }
 
-  async getBountiesOfAddress(_address: string) {
-    return this.contract.methods.getBountiesOfAddress(_address).call();
-  }
+  // async getBountiesOfAddress(_address: string) {
+  //   return this.contract.methods.getBountiesOfAddress(_address).call();
+  // }
 
   async getBounty(id: number) {
     const chainInformation: Bounty = await this.callTx(this.contract.methods.getBounty(id));
@@ -491,9 +491,9 @@ export class Network_v2 extends Model<typeof artifact.abi> implements Deployable
   /**
    * mark a PR ready for review
    */
-  async markPullRequestReadyForReview(bountyId: number, pullRequestId: number) {
-    return this.sendTx(this.contract.methods.markPullRequestReadyForReview(bountyId, pullRequestId));
-  }
+  // async markPullRequestReadyForReview(bountyId: number, pullRequestId: number) {
+  //   return this.sendTx(this.contract.methods.markPullRequestReadyForReview(bountyId, pullRequestId));
+  // }
 
   /**
    * create a proposal with a pull request for a bounty

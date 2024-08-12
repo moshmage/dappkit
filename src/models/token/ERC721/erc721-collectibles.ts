@@ -225,7 +225,7 @@ export class ERC721Collectibles extends Model<typeof artifact.abi> implements De
   }
 
   async exists(tokenId: number) {
-    return this.callTx(this.contract.methods.exists(tokenId));
+    return this.callTx(this.contract.methods.ownerOf(tokenId.toString()));
   }
 
   async setTokenURI(tokenId: number, uri: string) {

@@ -4,6 +4,7 @@ pragma solidity >=0.8.0;
 
 import "../utils/Opener.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 
 contract ERC721Collectibles is Opener, ERC721URIStorage {
 
@@ -15,14 +16,22 @@ contract ERC721Collectibles is Opener, ERC721URIStorage {
         address feeAddress,
         address otherAddress) public ERC721(name, symbol) Opener(_purchaseToken, baseFeeAddress, feeAddress, otherAddress, limitedAmount) {}
 
-    string baseURI = "";
+    string __baseURI = "";
+
+    function _baseURI() internal view override returns (string memory) {
+        return __baseURI;
+    }
+
+    function baseURI() public view returns (string memory) {
+        return _baseURI();
+    }
 
     function setTokenURI(uint256 tokenId, string memory uri) public onlyOwner {
         _setTokenURI(tokenId, uri);
     }
 
-    function setBaseURI(string memory _baseURI) public onlyOwner {
-        baseURI = _baseURI;
+    function setBaseURI(string memory baseURI_) public onlyOwner {
+        __baseURI = baseURI_;
     }
 
     function mint(uint256 tokenIdToMint) public {

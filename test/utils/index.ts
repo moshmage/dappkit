@@ -18,6 +18,7 @@ export async function shouldBeRejected(promise: Promise<any>, withErrorMessage?:
     await promise;
     expect(`to have failed`).to.not.exist;
   } catch (e: any) {
+    // console.log(`E`, e);
     if (withErrorMessage)
       expect((e?.innerError?.message || e?.message)).to.contain(withErrorMessage);
     else expect(e).to.exist;

@@ -64,7 +64,7 @@ describe(`Network_Registry`, () => {
       });
 
       it(`because not allowed`, async () => {
-        await shouldBeRejected(registry.lock(1), "exceeds allowance");
+        await shouldBeRejected(registry.lock(1), "ERC20InsufficientAllowance");
       });
 
       it(`because no tokens to unlock`, async () => {

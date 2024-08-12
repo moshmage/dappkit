@@ -127,7 +127,7 @@ export class Network_Registry extends Model<typeof artifact.abi> implements Depl
     return this.sendTx(this.contract.methods.lock(toSmartContractDecimals(_amount, this.token.decimals)));
   }
 
-  async unlock() { 
+  async unlock() {
     return this.sendTx(this.contract.methods.unlock());
   }
 

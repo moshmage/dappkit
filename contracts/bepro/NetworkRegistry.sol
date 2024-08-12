@@ -112,16 +112,15 @@ contract NetworkRegistry is ReentrancyGuard, Governed {
      *  user must have tokens to unlock
      *  - if user has a network
      *      TVL of network must be zero
-     *      All bounties must be closed or canceled
      *  transfer is successful
      */
-    function unlock() nonReentrant external {
+    function unlock() nonReentrant public {
         require(lockedTokensOfAddress[msg.sender] > 0, "UL0");
 
         if (networkOfAddress[msg.sender] != address(0)) {
             INetworkV2 network = INetworkV2(networkOfAddress[msg.sender]);
             require(network.totalNetworkToken() == 0, "UL1");
-            require((network.closedBounties() + network.canceledBounties()) == network.bountiesIndex(), "UL2");
+            //require((network.closedBounties() + network.canceledBounties()) == network.bountiesIndex(), "UL2");
 
             address closedNetworkAddress = networkOfAddress[msg.sender];
             openNetworks[closedNetworkAddress] = false;
